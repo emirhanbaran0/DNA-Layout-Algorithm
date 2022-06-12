@@ -1,0 +1,279 @@
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Random;
+import java.util.Scanner;
+
+public class main {
+
+	public static void main(String[] args) {
+		//1=A, 2=C, 3=G, 4=T
+		Scanner scan=new Scanner(System.in);
+		Random rand=new Random();
+		int dnaUzunluk,secim,sekansSayisi,sekansUzunluk;
+		int eslesmeOdulu,eslesmemeCezasi,indelCezasi;
+		System.out.print("(TR)DNA kullanici tarafindan mi girilecek: ");
+		System.out.println("(EN) DNA will be write by user:");
+		System.out.println("(TR)1-Evet 2-Hayir");
+		System.out.println("(EN)1-Yes 2-No");
+		secim=scan.nextInt(); scan.nextLine();
+		System.out.println("(TR)Sekanslanacak DNA'nin uzunlugunu giriniz: ");
+		dnaUzunluk=scan.nextInt(); scan.nextLine();
+		char[] dna=new char[dnaUzunluk];
+		if(secim==2)
+		{
+			for(int i=0;i<dnaUzunluk;i++)
+			{
+				
+				int sayi=rand.nextInt(4)+1;
+				switch(sayi)
+				{
+				case 1:
+					dna[i]='A'; break; 
+				case 2: 
+					dna[i]='C';  break;
+				case 3: 
+					dna[i]='G';  break;
+				 default:
+					 dna[i]='T'; break;
+				}
+				
+			}
+			
+		}
+		else if(secim==1)
+		{
+			
+			System.out.println("(TR)DNA ALFABESİ: A, C, G, T");
+			System.out.println("(EN) DNA ALPHABET: A, C, G, T");
+			System.out.println("(TR)DNA sekansini giriniz: ");	
+			System.out.println("(EN) Enter the DNA Sequence:");
+			String gecici=scan.nextLine();
+			for(int i=0;i<dnaUzunluk;i++)
+			{
+				dna[i]=gecici.charAt(i);
+			}
+		}
+		else
+		{
+			System.out.println("(TR)Yanlış bir seçim yaptiniz! Lütfen 1 ve 2 arasindan bir sayi seçiniz!");
+			System.out.println("(EN)You choose an invalid choice! Please choose 1 or 2!");
+			return;
+		}
+		    dnaYazdir(dna);
+		    System.out.println();
+			System.out.println("(TR)Kac adet sekans üretilecek: ");
+			System.out.println("(EN)How many sequence that we will produce: ");
+			sekansSayisi=scan.nextInt(); scan.nextLine();
+			if(sekansSayisi>dnaUzunluk)
+			{
+				System.out.println("(TR)Sekans Sayisi Uzunluktan buyuk olamaz lutfen gecerli bir secim yapin!");
+				System.out.println("(EN)Sequence number can't longer than sequence lenght please choose an valid choice! ");
+				return;
+			}
+			System.out.println("(TR)Uretilecek sekanslarin uzunlugunu giriniz: ");
+			System.out.println("(EN)Enter the lengt of sequence that you will produce: ");
+			sekansUzunluk=scan.nextInt();	
+			
+			char[][] sekanslar=new char[sekansSayisi][sekansUzunluk]; 
+			char[][] komplementler=new char[sekansSayisi][sekansUzunluk];
+			for(int i=0;i<sekansSayisi;i++)   //sekanslar oluşturuldu
+			{   int basPozisyon=rand.nextInt(dnaUzunluk-sekansUzunluk-1);
+				int k=basPozisyon+1;
+				sekanslar[i][0]=dna[basPozisyon];
+				for(int j=1;j<sekansUzunluk;j++)
+				{
+					sekanslar[i][j]=dna[k];
+					k++;
+				}
+			}
+			komplementler=ComplementOlustur(sekanslar); 
+			Sekansyazdir(sekanslar);
+			System.out.println("(TR)Skorlama Matrisinde Kullanılacak İndel Cezasini Giriniz: ");
+			System.out.println("(EN)Enter the penalty of indel that you will use in score matrix: ");
+			indelCezasi=scan.nextInt();
+			System.out.println("(TR)Skorlama Matrisinde Kullanılacak Eşleşmeme Cezasini Giriniz: ");
+			System.out.println("(EN)Enter the penalty of mismatch that you will use in score matrix: ");
+			eslesmemeCezasi=scan.nextInt();
+			System.out.println("(TR)Skorlama Matrisinde Kullanılacak Eşleşme Ödülünü Giriniz: ");
+			System.out.println("(EN)Enter the award of match that you will use in score matrix: ");
+			eslesmeOdulu=scan.nextInt();
+			 int[][] skorMatris = new int[sekansSayisi][sekansSayisi]; //N: kaç tane sekans üretildigi.
+		        for (int i = 0; i < sekansSayisi; i++) {
+		            for (int j = 0; j < sekansSayisi; j++) {
+		                if (i == j) {
+		                    continue;
+		                } else if(i<j) { // ust matris
+		                	skorMatris[i][j] = eslestirme(sekansUzunluk,sekansSayisi,indelCezasi,eslesmeOdulu, eslesmemeCezasi, sekanslar[i], sekanslar[j]);
+		                }
+		                else {
+		                	skorMatris[i][j] = eslestirme(sekansUzunluk,sekansSayisi,indelCezasi,eslesmeOdulu, eslesmemeCezasi, sekanslar[i], komplementler[j]);
+		                }
+		            }
+		        }
+		        System.out.println("(TR)Matriste gozukebilecek en kucuk sayiyi girin: ");
+		        System.out.println("(EN)Choose a lover limit that can be shown in your scoring matrix: ");
+		        int min=scan.nextInt();
+		        dosyaYazdir("ScoringMatrix",skorMatris,sekansSayisi,min);
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+	}
+   
+	
+	public static void dnaYazdir(char[] dna)
+	{   System.out.print("DNA: ");
+		for(int i=0;i<dna.length;i++)
+			System.out.print(dna[i]);
+	}
+	public static void Sekansyazdir(char[][] sekans)
+	{  
+		System.out.println("Read\t\t\t Read*");
+		for(int i=0;i<sekans.length;i++)
+		{    
+			for(int j=0,k=sekans[i].length-1;j<sekans[i].length;j++,k--)
+			{
+				System.out.print(sekans[i][j]);
+			}
+			System.out.print("\t\t\t"+"  ");
+			for(int k=sekans[i].length-1;k>=0;k--)
+			{    
+				switch(sekans[i][k])
+				{
+				case 'A': System.out.print("T"); break;
+				case 'T': System.out.print("A"); break;
+				case 'C': System.out.print("G"); break;
+				default: System.out.print("C");  break;
+				}
+			}
+			System.out.println();
+		}
+	}
+	public static char[][] ComplementOlustur(char[][] sekans)
+	{   char[][] complementler=new char[sekans.length][sekans[0].length];
+		for(int i=0;i<sekans.length;i++)
+		{    
+			for(int k=sekans[i].length-1,j=0;k>=0;k--,j++)
+			{    
+				switch(sekans[i][k])
+				{
+				case 'A': complementler[i][j]='T'; break;
+				case 'T':complementler[i][j]='A'; break;
+				case 'C': complementler[i][j]='G'; break;
+				default:complementler[i][j]='C';  break;
+				}
+			}
+		}
+		return complementler;
+	}
+	public static int eslestirme(int sekansUzunluk,int sekansSayisi, int indelCezasi, int eslesmeOdulu, int eslesmemeCezasi, char[] sekans1, char[] sekans2) {
+
+        int[][] matris = new int[sekansSayisi + 1][sekansSayisi + 1]; 
+        
+        for(int i=0;i<sekansUzunluk+1;i++)   //ilk sutunu sıfırladım
+        {
+        	matris[0][i]=0;
+        }
+        for(int j=0;j<sekansUzunluk+1;j++)    //ilk satiri sıfırladım
+        {
+        	matris[j][0]=0;
+        }
+
+        for (int i = 1; i < sekansUzunluk + 1; i++) {
+            for (int j = 1; j < sekansUzunluk + 1; j++) {
+                int capraz;
+                if (sekans1[i - 1] == sekans2[j - 1]) {
+                    capraz = eslesmeOdulu;
+                } else {
+                    capraz = -eslesmemeCezasi;
+                }
+                
+                
+                matris[i][j] =maxSayi(matris[i][j - 1] - indelCezasi,matris[i - 1][j - 1] + capraz,matris[i - 1][j] - indelCezasi);
+     
+
+            }
+        }
+         
+        int eslesme = matris[1][sekansUzunluk];
+        for (int k = 2; k < sekansUzunluk + 1; k++) {
+            if (matris[k][sekansUzunluk] > eslesme) {
+                eslesme = matris[k][sekansUzunluk];
+            }
+        }
+        for (int t = 1; t < sekansUzunluk + 1 ; t++) {
+            if (matris[sekansUzunluk][t] > eslesme) {
+                eslesme = matris[sekansUzunluk][t];
+            }
+        }
+        return eslesme;
+
+    }
+	public static int maxSayi(int sayi1,int sayi2,int sayi3)
+	{
+		if(sayi1>sayi2 && sayi1>sayi3)
+			return sayi1;
+		else if(sayi1>sayi2 && sayi1<sayi3)
+			return sayi3;
+		else if(sayi1<sayi2 && sayi1<sayi3)
+		{
+			if(sayi2<sayi3)
+				return sayi3;
+			else
+				return sayi2;
+		}
+		else
+			return sayi2;
+	}
+	public static void dosyaYazdir(String filename, int[][] matrix,int sekansSayisi,int min) {
+	    try {
+	        BufferedWriter bw = new BufferedWriter(new FileWriter(filename));
+	        for(int i=1;i<=sekansSayisi;i++)
+	        {
+	        	if(i<=9)
+	        	bw.write(i+"   ");
+	        	else
+	        		bw.write(i+"  ");
+	        }
+	        bw.newLine();
+	        for (int i = 0; i <sekansSayisi; i++) {
+	            for (int j = 0; j < sekansSayisi; j++) 
+	            {
+	            	 if(i==j)
+	           			{
+	            			 bw.write("*   " );
+	           			}
+	            	 else
+	            	 {
+	            		 if(matrix[i][j]>=min)
+	            		 {
+	            			 if(matrix[i][j]<=9 )
+	 	 	                    bw.write(matrix[i][j] +"   ");
+	 	 	            		if(matrix[i][j]>9)
+	 	 		                    bw.write(matrix[i][j] +"  ");
+	            		 }
+	            		 else
+	            		 {
+	            			 bw.write("    ");
+	            		 }
+	            	 }
+	            		
+	            		
+	            		
+	            			
+	            }
+	            bw.newLine();
+	        }
+	        bw.flush();
+	    } catch (IOException e) {}
+	    System.out.println("(TR)Dosyaya Yazdirma İslemi Basariyla Tamamlandi!");
+	    System.out.println("(EN)Printing to file completed successfully! ");
+	}
+}
